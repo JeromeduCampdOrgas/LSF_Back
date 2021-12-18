@@ -1,22 +1,24 @@
 const multer = require("multer");
 
 const MIME_TYPES = {
+  // notre dictionnaire d'extensions
   "image/jpg": "jpg",
   "image/jpeg": "jpg",
   "image/png": "png",
-  "image/webp": "webp",
+  "image.gif": "gif",
+  "image.webp": "webp",
 };
 
 const storage = multer.diskStorage({
   destination: (req, file, callback) => {
-    callback(null, "images");
+    // destination des images
+    callback(null, "./upload");
   },
   filename: (req, file, callback) => {
-    const name = file.originalname.split(" ").join("_");
+    // nouveau nom du fichier image pour éviter les doublons
+    const name = file.originalname.replace(/\.[^/.]+$/, "");
     const extension = MIME_TYPES[file.mimetype];
-    console.log(name + Date.now() + "." + extension);
     callback(null, name + Date.now() + "." + extension);
   },
 });
-
-module.exports = multer({ storage: storage }).single("picture");
+module.exports = multer({ storage: storage }).single("image"); // stockage de l'image publiée

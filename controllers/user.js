@@ -1,317 +1,167 @@
 //Imports
 const bcrypt = require("bcrypt");
-const jwtUtils = require("../utils/jwt.utils");
 const models = require("../models");
-const asyncLib = require("async");
+const jwt = require("jsonwebtoken");
+const fs = require("fs");
+const jwtVerif = require("../functions/jwt_verif");
+require("dotenv").config();
+//const token = require("../middleware/token"); // module qui génère le token
+const { Op } = require("sequelize");
 
 // Routes
 
-module.exports = {
-  signupbis: async function (req, res) {
-    // Params                  Récupérer les paramètres envoyés dans la requête
-    let email = req.body.email;
-    let username = req.body.username;
-    let password = req.body.password;
+exports.signup = async (req, res) => {
+  try {
+    const user = await models.User.findOne({
+      where: { email: req.body.email },
+    });
 
-    try {
-      const user = await models.User.findOne({
-        where: { email: email },
+    if (user !== null) {
+      if (user.email === req.body.email) {
+        return res.status(400).json({ error: "Ce compte existe déjà" });
+      }
+    } else {
+      const hash = await bcrypt.hash(req.body.password, 10);
+      const newUser = await models.User.create({
+        username: req.body.username,
+        email: req.body.email,
+        password: hash,
+        admin: false,
       });
-      if (user !== null) {
-        if (user.username === req.body.username) {
-          return res.status(400).json({ error: "ce pseudo est déjà utilisé" });
-        }
+
+      res.status(201).json({
+        message: `Votre compte est bien créé ${newUser.username} !`,
+      });
+    }
+  } catch (error) {
+    return res.status(400).send({ error: "Impossible de créer le compte" });
+  }
+};
+
+exports.login = async (req, res) => {
+  try {
+    const user = await models.User.findOne({
+      where: { email: req.body.email },
+    }); // on vérifie que l'adresse mail figure bien dan la bdd
+    if (user === null) {
+      return res.status(403).json({ error: "Connexion échouée" });
+    } else {
+      const hash = await bcrypt.compare(req.body.password, user.password); // on compare les mots de passes
+      if (!hash) {
+        return res.status(401).json({ error: "Mot de passe incorrect !" });
       } else {
-        const hash = await bcrypt.hash(password, 10);
-        const newUser = await models.User.create({
-          username: username,
-          email: email,
-          password: hash,
-        });
-
-        const tokenObject = await jwtUtils.generateTokenForUser(newUser);
-        res.status(201).send({
-          user: newUser,
-          token: tokenObject.token,
-          expires: tokenObject.expiresIn,
-          message: `Votre compte est bien créé ${newUser.username} !`,
+        res.status(200).json({
+          // on renvoie le user et le token
+          user: user,
+          token: jwt.sign(
+            {
+              userId: user.id,
+              username: user.username,
+              email: user.email,
+              isAdmin: user.isAdmin,
+            },
+            "RANDOM_TOKEN_SECRET",
+            {
+              expiresIn: "24h",
+            }
+          ),
+          message: "Bonjour " + user.username + " !" + " : ",
         });
       }
-    } catch (error) {
-      return res.status(400).send({ error: "email déjà utilisé" });
     }
-  },
-  //on exporte depuis ce module toutes les routes qu'il contient
-  ////////////////////////////////////////////////////////////
-  signup: function (req, res) {
-    // Params                  Récupérer les paramètres envoyés dans la requête
-    let email = req.body.email;
-    let username = req.body.username;
-    let password = req.body.password;
+  } catch (error) {
+    return res.status(500).json({ error: "Erreur serveur" });
+  }
+};
+exports.getAccount = async (req, res) => {
+  // on trouve l'utilisateur et on renvoie l'objet user
 
-    //test des paramètres
-    if (email == null || username == null || password == null) {
-      return res.status(400).json({ error: "missing parameters" });
-    }
+  try {
+    const user = await models.User.findOne({
+      where: { id: req.params.id },
+    });
+    res.status(200).send(user);
+  } catch (error) {
+    return res.status(500).send({ error: "Erreur serveur" });
+  }
+};
+exports.getAllUsers = async (req, res) => {
+  // on envoie tous les users sauf admin
+  try {
+    const users = await models.User.findAll({
+      attributes: ["username", "id", "image", "email"],
+    });
+    res.status(200).send(users);
+  } catch (error) {
+    return res.status(500).send({ error: "Erreur serveur" });
+  }
+};
+exports.updateAccount = async (req, res) => {
+  // modifier le profil
+  const id = req.params.id;
 
-    if (username.length >= 13 || username.length <= 4) {
-      return res
+  try {
+    const token = req.headers.authorization.split(" ")[1];
+    const decodedToken = jwt.verify(token, "RANDOM_TOKEN_SECRET");
+    const userId = decodedToken.userId;
+    const isAdmin = decodedToken.isAdmin;
+    let newPhoto;
+    let user = await models.User.findOne({ where: { id: id } }); // on trouve le user
+    if (userId === user.id || isAdmin === isAdmin) {
+      if (req.file && user.image) {
+        newPhoto = `${req.protocol}://${req.get("host")}/api/upload/${
+          req.file.filename
+        }`;
+        const filename = user.image.split("/upload")[1];
+        fs.unlink(`upload/${filename}`, (err) => {
+          // s'il y avait déjà une photo on la supprime
+          if (err) console.log(err);
+          else {
+            console.log(`Deleted file: upload/${filename}`);
+          }
+        });
+      } else if (req.file) {
+        newPhoto = `${req.protocol}://${req.get("host")}/api/upload/${
+          req.file.filename
+        }`;
+      }
+      if (newPhoto) {
+        user.image = newPhoto;
+      }
+      if (req.body.username) {
+        user.username = req.body.username;
+      }
+      const newUser = await user.save({ fields: ["username", "image"] }); // on sauvegarde les changements dans la bdd
+      res.status(200).json({
+        user: newUser,
+        messageRetour: "Votre profil a bien été modifié",
+      });
+    } else {
+      res
         .status(400)
-        .json({ error: "wrong username (must be length 5 - 12)" });
+        .json({ messageRetour: "Vous n'avez pas les droits requis" });
     }
-
-    if (!EMAIL_REGEX.test(email)) {
-      return res.status(400).json({ error: "email is not valid" });
-    }
-
-    if (!PASSWORD_REGEX.test(password)) {
-      return res.status(400).json({
-        error:
-          "password invalid (must length 4 - 10 and include 1 number at least)",
+  } catch (error) {
+    return res.status(500).send({ error: error });
+  }
+};
+exports.deleteAccount = async (req, res) => {
+  try {
+    const id = req.params.id;
+    console.log(id);
+    const user = await models.User.findOne({ where: { id: id } });
+    if (user.image !== null) {
+      const filename = user.image.split("/upload")[1];
+      fs.unlink(`upload/${filename}`, () => {
+        // sil' y a une photo on la supprime et on supprime le compte
+        models.User.destroy({ where: { id: id } });
+        res.status(200).json({ messageRetour: "utilisateur supprimé" });
       });
+    } else {
+      models.User.destroy({ where: { id: id } }); // on supprime le compte
+      res.status(200).json({ messageRetour: "utilisateur supprimé" });
     }
-
-    //exécution de fonctions en cascade
-    //1_Création d'un tableau de fonctions dont on a besoin
-    asyncLib.waterfall(
-      [
-        //1°fonction: vérifie si l'utilisateur est présent en base
-        function (done) {
-          models.User.findOne({
-            attributes: ["email"],
-            where: { email: email },
-          })
-            .then(function (userFound) {
-              //où userFound = résultat de la requête
-              console.log(userfound);
-              done(null, userFound); //null=>on passe à la fonction suivante userFound
-            })
-            .catch(function (err) {
-              return res.status(500).json({ error: "unable to verify user" }); //si la requête s'effectue mal
-            });
-        },
-        //2°fonction:
-        function (userFound, done) {
-          if (!userFound) {
-            //si le paramètre existe
-            bcrypt.hash(password, 5, function (err, bcryptedPassword) {
-              //on crypte le password
-              done(null, userFound, bcryptedPassword); //null car waterfall pas terminé
-            });
-          } else {
-            return res.status(409).json({ error: "user already exist" }); //si le paramètre userFound n'existe pas
-          }
-        },
-        //3°fonction
-        function (userFound, bcryptedPassword, done) {
-          let newUser = models.User.create({
-            email: email,
-            username: username,
-            password: bcryptedPassword,
-
-            isAdmin: 0,
-          })
-            .then(function (newUser) {
-              done(newUser); //ici pas de null car waterfall terminé
-            })
-            .catch(function (err) {
-              return res.status(500).json({ error: "cannot add user" });
-            });
-        },
-      ],
-      function (newUser) {
-        if (newUser) {
-          //si new user existe
-          return res.status(201).json({
-            userId: newUser.id,
-          });
-        } else {
-          return res.status(500).json({ error: "cannot add user" });
-        }
-      }
-    );
-  },
-  ///////////////////////////////////////////////////////////////
-  login: function (req, res) {
-    // Params
-    let email = req.body.email;
-    let password = req.body.password;
-    if (email == null || password == null) {
-      return res.status(400).json({ error: "missing parameters" });
-    }
-
-    asyncLib.waterfall(
-      [
-        function (done) {
-          models.User.findOne({
-            where: { email: email },
-          })
-            .then(function (userFound) {
-              done(null, userFound);
-            })
-            .catch(function (err) {
-              return res.status(500).json({ error: "unable to verify user" });
-            });
-        },
-        function (userFound, done) {
-          if (userFound) {
-            bcrypt.compare(
-              password,
-              userFound.password,
-              function (errBycrypt, resBycrypt) {
-                done(null, userFound, resBycrypt);
-              }
-            );
-          } else {
-            return res.status(404).json({ error: "user not exist in DB" });
-          }
-        },
-        function (userFound, resBycrypt, done) {
-          if (resBycrypt) {
-            done(userFound);
-          } else {
-            return res.status(403).json({ error: "invalid password" });
-          }
-        },
-      ],
-      function (userFound) {
-        if (userFound) {
-          return res.status(201).json({
-            username: userFound.username,
-            userId: userFound.id,
-            email: userFound.email,
-            token: jwtUtils.generateTokenForUser(userFound),
-            isAdmin: userFound.isAdmin,
-          });
-        } else {
-          return res.status(500).json({ error: "cannot log on user" });
-        }
-      }
-    );
-  },
-  ////////////////////////////////////////////////////////////////
-  getUserProfile: function (req, res) {
-    // Getting auth header
-    let headerAuth = req.headers["authorization"];
-    let userId = jwtUtils.getUserId(headerAuth);
-
-    if (userId < 0) return res.status(400).json({ error: "wrong token" });
-
-    models.User.findOne({
-      attributes: ["id", "email", "username", "isAdmin"],
-      where: { id: userId },
-    })
-      .then(function (user) {
-        if (user) {
-          res.status(201).json(user);
-        } else {
-          res.status(404).json({ error: "user not found" });
-        }
-      })
-      .catch(function (err) {
-        res.status(500).json({ error: "cannot fetch user" });
-      });
-  },
-  ////////////////////////////////////////////////////////////////
-  updateUserProfile: function (req, res) {
-    // Getting auth header
-    let headerAuth = req.headers["authorization"];
-    let userId = jwtUtils.getUserId(headerAuth);
-
-    // Params
-    let username = req.body.username;
-    let email = req.body.email;
-
-    asyncLib.waterfall(
-      [
-        function (done) {
-          models.User.findOne({
-            attributes: ["id", "email", "username"],
-            where: { id: userId },
-          })
-            .then(function (userFound) {
-              console.log(userFound);
-              done(null, userFound);
-            })
-            .catch(function (err) {
-              return res.status(500).json({ error: "unable to verify user" });
-            });
-        },
-        function (userFound, done) {
-          if (userFound) {
-            userFound
-              .update({
-                username: username ? username : userFound.username,
-                email: email ? email : userFound.email,
-              })
-              .then(function () {
-                done(userFound);
-              })
-              .catch(function (err) {
-                res.status(500).json({ error: "cannot update user" });
-              });
-          } else {
-            res.status(404).json({ error: "user not found" });
-          }
-        },
-      ],
-      function (userFound) {
-        if (userFound) {
-          return res.status(201).json(userFound);
-        } else {
-          return res.status(500).json({ error: "cannot update user profile" });
-        }
-      }
-    );
-  },
-  ///////////////////////////////////////////////////
-  deleteUserProfil: function (req, res) {
-    // Getting auth header
-    let headerAuth = req.headers["authorization"];
-    let userId = jwtUtils.getUserId(headerAuth);
-    let email = req.body.email;
-
-    asyncLib.waterfall([
-      function (done) {
-        models.User.findOne({
-          attibutes: ["id"],
-          where: { email: email, id: userId },
-        })
-          .then(function (userFound) {
-            done(null, userFound);
-          })
-          .catch(function (err) {
-            res.status(400).json({ error: err });
-          });
-      },
-      function (userFound, done) {
-        if (userFound) {
-          userFound
-            .destroy()
-            .then(() => res.status(200).json({ message: "user deleted" }))
-            .catch((err) => res.status(500).json({ error: err }));
-        }
-      },
-    ]),
-      function (err) {
-        if (err) {
-          throw new Error(err);
-        } else {
-          console.log("No error happened in any steps, operation done!");
-        }
-      };
-  },
-  getUsers: function (req, res) {
-    // Getting auth header
-    let headerAuth = req.headers["authorization"];
-    let userId = jwtUtils.getUserId(headerAuth);
-    if (userId < 0) {
-      return res.status(400).json({ error: "wrong token" });
-    }
-    models.User.findAll({
-      attributes: ["id", "username"],
-    })
-      .then((user) => res.status(201).json(user))
-      .catch((error) => res.status(500).json({ error: "cannot fetch user" }));
-  },
+  } catch (error) {
+    return res.status(500).send({ error: "Erreur serveur" });
+  }
 };

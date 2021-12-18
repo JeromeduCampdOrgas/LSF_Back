@@ -2,7 +2,7 @@ const express = require("express");
 const helmet = require("helmet");
 //const dotenv = require('dotenv').config();
 const path = require("path");
-const userRoutes = require("./routes/user.routes");
+const userRoutes = require("./routes/user");
 //const messageRoutes = require("./routes/message");
 //const likeRoutes = require("./routes/like");
 
