@@ -39,6 +39,7 @@ exports.signup = async (req, res) => {
 };
 
 exports.login = async (req, res) => {
+  console.log(req);
   try {
     const user = await models.User.findOne({
       where: { email: req.body.email },
@@ -89,7 +90,7 @@ exports.getAllUsers = async (req, res) => {
   // on envoie tous les users sauf admin
   try {
     const users = await models.User.findAll({
-      attributes: ["username", "id", "image", "email"],
+      attributes: ["username", "id", "image", "email", "isAdmin"],
     });
     res.status(200).send(users);
   } catch (error) {
