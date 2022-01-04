@@ -12,6 +12,7 @@ const { Op } = require("sequelize");
 
 exports.signup = async (req, res) => {
   try {
+    console.log(req.body);
     const user = await models.User.findOne({
       where: { email: req.body.email },
     });
@@ -26,6 +27,7 @@ exports.signup = async (req, res) => {
         username: req.body.username,
         email: req.body.email,
         password: hash,
+        image: req.body.image,
         admin: false,
       });
 
@@ -76,11 +78,12 @@ exports.login = async (req, res) => {
 };
 exports.getAccount = async (req, res) => {
   // on trouve l'utilisateur et on renvoie l'objet user
-
+  console.log("coucou");
   try {
     const user = await models.User.findOne({
       where: { id: req.params.id },
     });
+    console.log(user);
     res.status(200).send(user);
   } catch (error) {
     return res.status(500).send({ error: "Erreur serveur" });
@@ -146,19 +149,14 @@ exports.updateAccount = async (req, res) => {
     return res.status(500).send({ error: error });
   }
 };
-exports.deleteAccount = async (req, res) => {
+exports.deleteAccount = (req, res) => {
+  console.log("coucou bis");
+  console.log(req.params.id);
   try {
     const id = req.params.id;
     console.log(id);
-    const user = await models.User.findOne({ where: { id: id } });
-    if (user.image !== null) {
-      const filename = user.image.split("/upload")[1];
-      fs.unlink(`upload/${filename}`, () => {
-        // sil' y a une photo on la supprime et on supprime le compte
-        models.User.destroy({ where: { id: id } });
-        res.status(200).json({ messageRetour: "utilisateur supprimé" });
-      });
-    } else {
+
+    {
       models.User.destroy({ where: { id: id } }); // on supprime le compte
       res.status(200).json({ messageRetour: "utilisateur supprimé" });
     }

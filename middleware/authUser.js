@@ -10,9 +10,9 @@ exports.valid = (req, res, next) => {
     .is()
     .max(20) // Maximum length 20
     .has()
-    .uppercase() // Must have uppercase letters
+    //.uppercase() // Must have uppercase letters
     .has()
-    .lowercase() // Must have lowercase letters
+    //.lowercase() // Must have lowercase letters
     .has()
     .not()
     .symbols(); // Has no symbols
