@@ -105,7 +105,7 @@ exports.updateAccount = async (req, res) => {
   const id = req.params.id;
 
   try {
-    const token = req.headers.authorization.split(" ")[1];
+    const token = req.headers.authorization; //.split(" ")[1];
     const decodedToken = jwt.verify(token, "RANDOM_TOKEN_SECRET");
     const userId = decodedToken.userId;
     const isAdmin = decodedToken.isAdmin;
@@ -135,7 +135,12 @@ exports.updateAccount = async (req, res) => {
       if (req.body.username) {
         user.username = req.body.username;
       }
-      const newUser = await user.save({ fields: ["username", "image"] }); // on sauvegarde les changements dans la bdd
+      if (req.body.email) {
+        user.email = req.body.email;
+      }
+      const newUser = await user.save({
+        fields: ["username", "email", "image"],
+      }); // on sauvegarde les changements dans la bdd
       res.status(200).json({
         user: newUser,
         messageRetour: "Votre profil a bien été modifié",
@@ -151,11 +156,8 @@ exports.updateAccount = async (req, res) => {
 };
 exports.deleteAccount = (req, res) => {
   console.log("coucou bis");
-  console.log(req.params.id);
   try {
     const id = req.params.id;
-    console.log(id);
-
     {
       models.User.destroy({ where: { id: id } }); // on supprime le compte
       res.status(200).json({ messageRetour: "utilisateur supprimé" });

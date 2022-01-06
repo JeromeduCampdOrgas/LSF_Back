@@ -4,6 +4,7 @@ const bodyParser = require("body-parser");
 //const dotenv = require('dotenv').config();
 const path = require("path");
 const userRoutes = require("./routes/user");
+const adminRoutes = require("./routes/admin");
 //const messageRoutes = require("./routes/message");
 //const likeRoutes = require("./routes/like");
 
@@ -30,6 +31,7 @@ app.use(express.json());
 app.use("/images", express.static(path.join(__dirname, "images")));
 
 app.use("/api/", userRoutes);
+app.use("/api/", adminRoutes);
 //app.use("/api/", messageRoutes);
 //app.use("/api/", likeRoutes);
 
