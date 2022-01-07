@@ -39,4 +39,7 @@ module.exports = {
       messageRetour: "Le profil a bien été modifié",
     });
   },
+  createUser: function (req, res) {
+    console.log(req.body);
+  },
 };

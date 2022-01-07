@@ -41,11 +41,11 @@ exports.signup = async (req, res) => {
 };
 
 exports.login = async (req, res) => {
-  console.log(req);
   try {
     const user = await models.User.findOne({
       where: { email: req.body.email },
     }); // on vérifie que l'adresse mail figure bien dan la bdd
+
     if (user === null) {
       return res.status(403).json({ error: "Connexion échouée" });
     } else {
@@ -138,9 +138,16 @@ exports.updateAccount = async (req, res) => {
       if (req.body.email) {
         user.email = req.body.email;
       }
+      if (req.body.password) {
+        const hash = await bcrypt.hash(req.body.password, 10);
+        user.password = hash;
+      }
+
       const newUser = await user.save({
-        fields: ["username", "email", "image"],
-      }); // on sauvegarde les changements dans la bdd
+        fields: ["username", "email", "image", "password"],
+      });
+
+      // on sauvegarde les changements dans la bdd
       res.status(200).json({
         user: newUser,
         messageRetour: "Votre profil a bien été modifié",
