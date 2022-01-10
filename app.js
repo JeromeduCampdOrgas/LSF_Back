@@ -5,6 +5,7 @@ const bodyParser = require("body-parser");
 const path = require("path");
 const userRoutes = require("./routes/user");
 const adminRoutes = require("./routes/admin");
+const refugeRoutes = require("./routes/refuge");
 //const messageRoutes = require("./routes/message");
 //const likeRoutes = require("./routes/like");
 
@@ -32,7 +33,7 @@ app.use("/images", express.static(path.join(__dirname, "images")));
 
 app.use("/api/", userRoutes);
 app.use("/api/", adminRoutes);
-//app.use("/api/", messageRoutes);
+app.use("/api/", refugeRoutes);
 //app.use("/api/", likeRoutes);
 
 module.exports = app;

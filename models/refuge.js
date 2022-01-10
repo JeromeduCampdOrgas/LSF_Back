@@ -7,6 +7,7 @@ module.exports = (sequelize, DataTypes) => {
     "Refuge",
     {
       name: DataTypes.STRING,
+      imageUrl: DataTypes.STRING,
     },
     {
       classMethods: {
