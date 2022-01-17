@@ -8,6 +8,15 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER,
       },
+      refugeId: {
+        allowNull: false,
+        type: Sequelize.INTEGER,
+        references: {
+          model: "Refuges",
+          key: "id",
+        },
+        onDelete: "CASCADE",
+      },
 
       nom: {
         type: Sequelize.STRING,
