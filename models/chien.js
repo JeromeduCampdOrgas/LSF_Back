@@ -24,6 +24,12 @@ module.exports = (sequelize, DataTypes) => {
               allowNull: false,
             },
           });
+          models.Chien.hasMany(models.chiencarousel, {
+            foreignKey: "chienId",
+            onDelete: "CASCADE",
+            onUpdate: "CASCADE",
+            hooks: true,
+          });
         },
       },
     }

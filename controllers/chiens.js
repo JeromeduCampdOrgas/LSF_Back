@@ -1,6 +1,7 @@
 const models = require("../models");
 const fs = require("fs");
 const { json } = require("body-parser");
+//const FormData = require(" form-data ");
 
 module.exports = {
   createChien: function (req, res) {
@@ -16,6 +17,7 @@ module.exports = {
     let attachmentURL = `${req.protocol}://${req.get(
       "host"
     )}/images/refuges/${refuge}/${name}/${req.file.filename}`;
+    console.log(req.body.carousel);
 
     models.Chien.findOne({
       where: { nom: name, refugeId: refugeId },
