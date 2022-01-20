@@ -1,7 +1,13 @@
 const models = require("../models");
-const fs = require("fs");
 const { json } = require("body-parser");
+const upload = require("../middleware/multer-carousel");
 //const FormData = require(" form-data ");
+const MIME_TYPES = {
+  "image/jpg": "jpg",
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/heic": "heic",
+};
 
 module.exports = {
   createChien: function (req, res) {
@@ -17,12 +23,11 @@ module.exports = {
     let attachmentURL = `${req.protocol}://${req.get(
       "host"
     )}/images/refuges/${refuge}/${name}/${req.file.filename}`;
-    console.log(req.body.carousel);
+    console.log(req.body);
 
     models.Chien.findOne({
       where: { nom: name, refugeId: refugeId },
     }).then((chien) => {
-      console.log(chien);
       if (chien == null) {
         models.Chien.create({
           refugeId: refugeId,
@@ -56,6 +61,15 @@ module.exports = {
       res.status(200).send(chiens);
     } catch (error) {
       return res.status(501).send({ error: "Erreur serveur" });
+    }
+  },
+  carousel: async function (req, res) {
+    try {
+      console.log(req.body.picture);
+
+      return res.status(200).json({ message: "ok" });
+    } catch {
+      console.log("boulette");
     }
   },
 };
