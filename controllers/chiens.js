@@ -1,7 +1,8 @@
 const models = require("../models");
 const { json } = require("body-parser");
-const upload = require("../middleware/multer-carousel");
-//const FormData = require(" form-data ");
+const fs = require("fs");
+const path = require("path");
+
 const MIME_TYPES = {
   "image/jpg": "jpg",
   "image/jpeg": "jpg",
@@ -23,8 +24,6 @@ module.exports = {
     let attachmentURL = `${req.protocol}://${req.get(
       "host"
     )}/images/refuges/${refuge}/${name}/${req.file.filename}`;
-    console.log(req.body);
-
     models.Chien.findOne({
       where: { nom: name, refugeId: refugeId },
     }).then((chien) => {
@@ -64,12 +63,35 @@ module.exports = {
     }
   },
   carousel: async function (req, res) {
-    try {
-      console.log(req.body.picture);
+    console.log("coucou");
+    console.log(req.body);
+    console.log(req.files);
 
-      return res.status(200).json({ message: "ok" });
-    } catch {
-      console.log("boulette");
+    let refugeId = req.body.refugeId;
+    let nom = req.body.nom;
+    let chienId = req.body.chienId;
+
+    console.log(nom);
+    try {
+      for (let i = 0; i < req.files.length; i++) {
+        let attachmentURL = `${req.protocol}://${req.get(
+          "host"
+        )}/images/chiencarousel/${req.files[i].filename}`;
+        await models.ChiensCarousel.create({
+          nom: nom,
+          chienId: chienId,
+          refugeId: refugeId,
+          images: attachmentURL,
+        });
+        /*.then(() => {
+            return res.status(200).send({ status: 0, message: "Tout est ok" });
+          })
+          .catch(() => {
+            return res.status(500).send({ status: 1, message: "Tout est ok" });
+          });*/
+      }
+    } catch (error) {
+      return res.status(501).send({ error: "Erreur serveur" });
     }
   },
 };

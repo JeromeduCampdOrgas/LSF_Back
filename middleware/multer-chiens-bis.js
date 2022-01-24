@@ -14,7 +14,7 @@ const storage = multer.diskStorage({
     const refuge = req.body.refuge;
     const dest = "images/refuges/" + refuge + "/" + req.body.name;
 
-    fs.access(dest, function (error) {
+    fs.open(dest, function (error) {
       if (error) {
         console.log("Directory does not exist.");
         return fs.mkdir(dest, (error) => cb(error, dest));
