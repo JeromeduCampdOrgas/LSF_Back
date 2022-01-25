@@ -24,4 +24,4 @@ const storage = multer.diskStorage({
     );
   },
 });
-module.exports = multer({ storage: storage }).array("carousel", 5);
+module.exports = multer({ storage: storage }).array("carousel", 10);
