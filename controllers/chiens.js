@@ -63,16 +63,13 @@ module.exports = {
     }
   },
   carousel: async function (req, res) {
-    console.log("coucou");
-    console.log(req.body);
-    console.log(req.files);
-
     let refugeId = req.body.refugeId;
     let nom = req.body.nom;
     let chienId = req.body.chienId;
 
-    console.log(nom);
     try {
+      console.log(req.files.length);
+      console.log(req.files);
       for (let i = 0; i < req.files.length; i++) {
         let attachmentURL = `${req.protocol}://${req.get(
           "host"
@@ -83,13 +80,20 @@ module.exports = {
           refugeId: refugeId,
           images: attachmentURL,
         });
-        /*.then(() => {
-            return res.status(200).send({ status: 0, message: "Tout est ok" });
-          })
-          .catch(() => {
-            return res.status(500).send({ status: 1, message: "Tout est ok" });
-          });*/
       }
+      return res.status(201).json({ message: "C'est tout bon" });
+    } catch (error) {
+      return res.status(501).send({ error: "Erreur serveur" });
+    }
+  },
+  chiensCarousel: async function (req, res) {
+    let chienId = req.params.chienId;
+    try {
+      const carousel = await models.ChiensCarousel.findAll({
+        where: { chienId: chienId },
+      });
+
+      return res.status(200).json(carousel);
     } catch (error) {
       return res.status(501).send({ error: "Erreur serveur" });
     }
