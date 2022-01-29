@@ -1,7 +1,10 @@
 const models = require("../models");
 const { json } = require("body-parser");
 const fs = require("fs");
+const express = require("express");
 const path = require("path");
+const chemin = process.cwd() + "/images/chienCarousel";
+("c:/users/ducam/onedrive/bureau/lsf/lsf_back/images/chienCarousel");
 
 const MIME_TYPES = {
   "image/jpg": "jpg",
@@ -68,8 +71,6 @@ module.exports = {
     let chienId = req.body.chienId;
 
     try {
-      console.log(req.files.length);
-      console.log(req.files);
       for (let i = 0; i < req.files.length; i++) {
         let attachmentURL = `${req.protocol}://${req.get(
           "host"
@@ -96,6 +97,33 @@ module.exports = {
       return res.status(200).json(carousel);
     } catch (error) {
       return res.status(501).send({ error: "Erreur serveur" });
+    }
+  },
+  chiensCarouselSuppr: function (req, res) {
+    let imageId = req.params.id;
+    {
+      models.ChiensCarousel.findOne({
+        where: { id: imageId },
+      }).then((image) => {
+        let chaine = image.images;
+        let debut = chaine.indexOf("IMG");
+        let fin = chaine.lastIndexOf(".JPG") + 4;
+        let longueur = fin - debut;
+        let newChaine = chaine.substr(debut, longueur);
+        /************************* */
+
+        fs.unlink(`${chemin}/${newChaine}`, () => {
+          models.ChiensCarousel.destroy({
+            where: { id: imageId },
+          })
+            .then(() => res.status(200).json({ message: "Objet supprimé !" }))
+            .catch((error) =>
+              res
+                .status(400)
+                .json({ error: "Impossible de supprimer le message" })
+            );
+        });
+      });
     }
   },
 };

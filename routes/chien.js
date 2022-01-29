@@ -8,5 +8,5 @@ router.post("/chiens", multer, chienCtrl.createChien); //
 router.get("/chiens/:refugeId", chienCtrl.getAllChiensOneRefuge);
 router.post("/chiens/carousel", multerCarousel, chienCtrl.carousel);
 router.get("/chiens/carousel/:chienId", chienCtrl.chiensCarousel);
-
+router.delete("/chiens/carousel/:id", chienCtrl.chiensCarouselSuppr);
 module.exports = router;
