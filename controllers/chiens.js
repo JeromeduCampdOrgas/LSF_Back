@@ -10,11 +10,11 @@ const MIME_TYPES = {
   "image/jpg": "jpg",
   "image/jpeg": "jpg",
   "image/png": "png",
-  "image/heic": "heic",
 };
 
 module.exports = {
   createChien: function (req, res) {
+    console.log(req);
     let refuge = req.body.refuge;
     let refugeId = req.body.refugeId;
     let name = req.body.name;
@@ -53,6 +53,28 @@ module.exports = {
       }
     });
   },
+  updateChien: async function (req, res) {
+    console.log(req.body);
+    console.log(req.params.id);
+    let id = req.params.id;
+    await models.Chien.update(
+      {
+        puce: req.body.puce,
+        sexe: req.body.sexe,
+        age: req.body.age,
+        taille: req.body.taille,
+        chats: req.body.chats,
+        sante: req.body.sante,
+        statut: req.body.statut,
+      },
+      {
+        where: {
+          id: id,
+        },
+      }
+    ).then((res) => res.status(200).json({ message: "Mise à jour effectuée" }));
+  },
+
   getAllChiensOneRefuge: async function (req, res) {
     //let refugeId = req.params.refugeId;
 

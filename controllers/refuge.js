@@ -72,4 +72,26 @@ module.exports = {
       })
       .catch((err) => res.status(500).json(err));
   },
+  deleteRefuge: async function (req, res) {
+    let refugeId = req.params.id;
+    await models.Refuge.findOne({
+      where: {
+        id: refugeId,
+      },
+    })
+      .then(() => {
+        models.Refuge.destroy({
+          where: {
+            id: refugeId,
+          },
+        })
+          .then(() => {
+            res.status(201).json({ message: "refuge supprimée" });
+          })
+          .catch(() =>
+            res.status(500).json({ message: "une erreur est survenue" })
+          );
+      })
+      .catch(() => res.status(400).json({ message: "Refuge non trouvé" }));
+  },
 };
