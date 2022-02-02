@@ -14,7 +14,6 @@ const MIME_TYPES = {
 
 module.exports = {
   createChien: function (req, res) {
-    console.log(req);
     let refuge = req.body.refuge;
     let refugeId = req.body.refugeId;
     let name = req.body.name;
@@ -27,35 +26,26 @@ module.exports = {
     let attachmentURL = `${req.protocol}://${req.get(
       "host"
     )}/images/refuges/${refuge}/${name}/${req.file.filename}`;
-    models.Chien.findOne({
-      where: { nom: name, refugeId: refugeId },
-    }).then((chien) => {
-      if (chien == null) {
-        models.Chien.create({
-          refugeId: refugeId,
-          nom: name,
-          puce: puce,
-          sexe: sexe,
-          age: age,
-          taille: taille,
-          chats: chat,
-          statut: statut,
-          imageUrl: attachmentURL,
-        })
-          .then((newChien) => {
-            res
-              .status(201)
-              .json({ message: "Chien successfully created", newChien });
-          })
-          .catch((err) => res.status(500).json(err));
-      } else {
-        res.status(201).json({ message: "Ce chien existe déjà" });
-      }
-    });
+
+    models.Chien.create({
+      refugeId: refugeId,
+      nom: name,
+      puce: puce,
+      sexe: sexe,
+      age: age,
+      taille: taille,
+      chats: chat,
+      statut: statut,
+      imageUrl: attachmentURL,
+    })
+      .then((newChien) => {
+        res
+          .status(201)
+          .json({ message: "Chien successfully created", newChien });
+      })
+      .catch((err) => res.status(500).json(err));
   },
   updateChien: async function (req, res) {
-    console.log(req.body);
-    console.log(req.params.id);
     let id = req.params.id;
     await models.Chien.update(
       {
