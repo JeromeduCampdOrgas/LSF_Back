@@ -1,14 +1,13 @@
 const express = require("express");
 const helmet = require("helmet");
 const bodyParser = require("body-parser");
-//const dotenv = require('dotenv').config();
+
 const path = require("path");
 const userRoutes = require("./routes/user");
 const adminRoutes = require("./routes/admin");
 const refugeRoutes = require("./routes/refuge");
 const chiensRoutes = require("./routes/chien");
-//const messageRoutes = require("./routes/message");
-//const likeRoutes = require("./routes/like");
+const searchRoutes = require("./routes/search");
 
 const app = express();
 
@@ -36,5 +35,6 @@ app.use("/api/", userRoutes);
 app.use("/api/", adminRoutes);
 app.use("/api/", refugeRoutes);
 app.use("/api/", chiensRoutes);
+app.use("/api/", searchRoutes);
 
 module.exports = app;

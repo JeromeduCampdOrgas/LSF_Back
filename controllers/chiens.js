@@ -45,9 +45,10 @@ module.exports = {
       })
       .catch((err) => res.status(500).json(err));
   },
-  updateChien: async function (req, res) {
+  updateChien: function (req, res) {
     let id = req.params.id;
-    await models.Chien.update(
+
+    models.Chien.update(
       {
         puce: req.body.puce,
         sexe: req.body.sexe,
@@ -56,13 +57,28 @@ module.exports = {
         chats: req.body.chats,
         sante: req.body.sante,
         statut: req.body.statut,
+        commentaires: req.body.commentaires,
       },
       {
         where: {
           id: id,
         },
       }
-    ).then((res) => res.status(200).json({ message: "Mise à jour effectuée" }));
+    )
+      .then((newChien) => {
+        res
+          .status(201)
+          .json({ message: "Chien successfully updated", newChien });
+      })
+      .catch((err) => console.log(err));
+  },
+  getAllChiens: async function (req, res) {
+    try {
+      const chiens = await models.Chien.findAll({});
+      res.status(200).send(chiens);
+    } catch (error) {
+      return res.status(501).send({ error: "Erreur serveur" });
+    }
   },
 
   getAllChiensOneRefuge: async function (req, res) {
@@ -101,6 +117,7 @@ module.exports = {
   },
   chiensCarousel: async function (req, res) {
     let chienId = req.params.chienId;
+    console.log(chienId);
     try {
       const carousel = await models.ChiensCarousel.findAll({
         where: { chienId: chienId },
