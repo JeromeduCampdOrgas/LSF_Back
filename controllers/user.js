@@ -12,7 +12,6 @@ const { Op } = require("sequelize");
 
 exports.signup = async (req, res) => {
   try {
-    console.log(req.body);
     const user = await models.User.findOne({
       where: { email: req.body.email },
     });
