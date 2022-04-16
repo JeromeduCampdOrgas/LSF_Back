@@ -77,7 +77,7 @@ module.exports = {
       const chiens = await models.Chien.findAll({});
       res.status(200).send(chiens);
     } catch (error) {
-      return res.status(501).send({ error: "Erreur serveur" });
+      return res.status(500).send({ error: "Erreur serveur" });
     }
   },
 
