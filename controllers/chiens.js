@@ -4,21 +4,7 @@ const fs = require("fs");
 const express = require("express");
 const path = require("path");
 const chemin = process.cwd() + "/images/chienCarousel";
-
-const port = normalizePort(process.env.PORT || "3000");
-app.set("port", port);
-
-const address = server.address();
-  const bind =
-    typeof address === "string" ? "pipe " + address : "port: " + port;
 //("c:/users/ducam/onedrive/bureau/lsf/lsf_back/images/chienCarousel");
-
-/************ */
-const http = require("http");
-const app = require("./app");
-
-const normalizePort = (val) => {
-  const port = parseInt(val, 10);
 
 const MIME_TYPES = {
   "image/jpg": "jpg",
@@ -92,7 +78,7 @@ module.exports = {
       res.status(200).send(chiens);
     } catch (error) {
       return res.status(500).send({
-        error: bind,
+        error: "Erreur serveur",
       });
     }
   },
