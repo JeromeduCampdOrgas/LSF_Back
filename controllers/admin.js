@@ -18,9 +18,7 @@ module.exports = {
     //console.log(req.body);
     let id = req.params.id;
     let user = await models.User.findOne({ where: { id: id } });
-    /*console.log(req.body.username);
-    console.log(req.body.email);
-    console.log(req.body.isAdmin);*/
+
     if (req.body.username) {
       user.username = req.body.username;
     }
