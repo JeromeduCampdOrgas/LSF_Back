@@ -74,6 +74,7 @@ module.exports = {
   },
   getAllChiens: async function (req, res) {
     try {
+      console.log(res);
       const chiens = await models.Chien.findAll({});
       res.status(200).send(chiens);
     } catch (error) {
